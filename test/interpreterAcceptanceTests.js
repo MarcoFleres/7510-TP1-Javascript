@@ -90,4 +90,14 @@ describe("Interpreter", function () {
 
 });
 
+describe('Empty Interpreter', function() {
 
+    var interpreter = new Interpreter();
+
+    it('Parsing without initialization', function () {
+        assert.throws(() => {
+            interpreter.checkQuery('hijo(pepe, juan)');
+        }, "DB not initialized");
+    });
+
+});

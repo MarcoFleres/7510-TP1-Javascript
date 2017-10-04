@@ -15,12 +15,12 @@ var Interpreter = function () {
             var line = dbLines[i];
 
             if(match = matchFact(line)) {
-                console.log(" Fact > ", match);
+                //console.log(" Fact > ", match);
 
                 (db.facts[match.verb] = db.facts[match.verb] || []).push(match.parameters);
 
             } else if(match = matchRule(line)) {
-                console.log(" Rule > ", match);
+                //console.log(" Rule > ", match);
 
                 db.rules[match.verb] = match;
 
@@ -30,19 +30,43 @@ var Interpreter = function () {
 
         }
 
-        console.log(JSON.stringify(db, null, ' '));
+        //console.log(JSON.stringify(db, null, ' '));
 
     }
 
-    this.checkQuery = function (params) {
+    this.checkQuery = function (query) {
 
         if(!db) throw "DB not initialized";
+
+        var match = matchQuery(query);
+
+        if(!match) throw "Invalid Query: " + query;
+
+        if(db.facts[match.verb]) {
+            console.log("It is a Fact!")
+        } else if(db.rules[match.verb]) {
+            console.log("It is a Rule!");
+        }
 
         return true;
     }
 
+    function matchQuery(line) {
+
+        //La regex coincide casi con la de facts, pero podemos necesitar cambiarlas independientemente.
+        var match = line.match('^ *\([a-zA-Z]+\)\\(\([a-z ,]*?\)\\) *$');
+
+        if(!match) return null;
+
+        return {
+            verb : match[1],
+            parameters : match[2].split(/ *, */)
+        }
+
+    }
+
     function matchFact(line) {
-        var match = line.match('^ *\([a-z]+\)\\(\([a-z ,]*?\)\\)\. *$');
+        var match = line.match('^ *\([a-zA-Z]+\)\\(\([a-z ,]*?\)\\)\. *$');
 
         if(!match) return null;
 

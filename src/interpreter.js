@@ -43,7 +43,16 @@ var Interpreter = function () {
         if(!match) throw "Invalid Query: " + query;
 
         if(db.facts[match.verb]) {
-            console.log("It is a Fact!")
+            // Buscamos en la base de datos un fact con los mismos parámetros
+            // console.log("Checking query agains facts with parameters: " + JSON.stringify(match.parameters));
+            // console.log("Searching fact parameters: " + JSON.stringify(db.facts[match.verb]));
+            var queryParameters = match.parameters;
+
+            return undefined != db.facts[match.verb].find(parameters => {
+                if(parameters.length != queryParameters.length) return false;
+                return queryParameters.every( (parameter,index) => parameter == parameters[index] );
+            });
+
         } else if(db.rules[match.verb]) {
             console.log("It is a Rule!");
         }

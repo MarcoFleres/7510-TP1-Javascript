@@ -38,22 +38,50 @@ var Interpreter = function () {
 
         if(!db) throw "DB not initialized";
 
+        console.log("Evaluating " + query);
+
         var match = matchQuery(query);
 
         if(!match) throw "Invalid Query: " + query;
+
+        var queryParameters = match.parameters;
 
         if(db.facts[match.verb]) {
             // Buscamos en la base de datos un fact con los mismos parámetros
             // console.log("Checking query agains facts with parameters: " + JSON.stringify(match.parameters));
             // console.log("Searching fact parameters: " + JSON.stringify(db.facts[match.verb]));
-            var queryParameters = match.parameters;
 
             return undefined != db.facts[match.verb].find(parameters => {
                 if(parameters.length != queryParameters.length) return false;
                 return queryParameters.every( (parameter,index) => parameter == parameters[index] );
             });
 
-        } else if(db.rules[match.verb]) {
+        } else if(rule = db.rules[match.verb]) {
+
+            console.log("Evaluating rule: " + JSON.stringify(rule));
+
+            //Mapeamos los parámetros de la query con los de la regla
+
+            if(rule.parameters.length != queryParameters.length) return false;
+
+            var parameterMap = {};
+
+            rule.parameters.forEach((element, index) => {
+                parameterMap[element] = queryParameters[index];
+            });
+
+            console.log("Parameter Map: " + JSON.stringify(parameterMap));
+
+            return rule.conditions.every(condition => {
+
+                console.log("Evaluating condition: " + JSON.stringify(condition));
+
+                return this.checkQuery(`${condition.verb}(${condition.parameters.map(e => parameterMap[e]).join(",")})`)
+
+
+            });
+
+
             console.log("It is a Rule!");
         }
 
@@ -92,10 +120,26 @@ var Interpreter = function () {
 
         if(!match) return null;
 
+        var conditions = match[3].split(/ *,(?![^(]*\)) */);    // Split por comas que no estén entre paréntesis
+
+        conditions = conditions.map(condition =>  {
+            //console.log("Parsing Condition : " + condition);
+            var match = condition.match(' *\([a-zA-Z]+\)\\(\([a-zA-Z ,]*?\)\\) *');
+
+            if(!match) return null;
+
+            return {
+                verb : match[1],
+                parameters : match[2].split(/ *, */)
+            }
+        });
+
+        //console.log("Condiciones: " + JSON.stringify(conditions));
+
         return {
             verb : match[1],
             parameters : match[2].split(/ *, */),
-            conditions : match[3].split(/ *,(?![^(]*\)) */)
+            conditions
         }
 
     }

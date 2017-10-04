@@ -1,12 +1,14 @@
 var Interpreter = function () {
 
 
-    var db = {
-        facts : {},
-        rules : {}
-    };
+    var db;
 
     this.parseDB = function (dbLines) {
+
+        db = {
+          facts : {},
+            rules : {}
+        };
 
         for(var i = 0 ; i < dbLines.length ; i++) {
 

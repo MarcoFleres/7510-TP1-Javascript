@@ -75,35 +75,45 @@ var Interpreter = function () {
         return true;
     }
 
+    function parseParameters(string) {
+
+        var tokens = string.split(/ *, */);
+        
+        if(tokens.length == 0 || tokens.find(t => t.length == 0) !== undefined) throw `Malformed Parameters ${string}`;
+
+        return tokens;
+
+    }
+
     function matchQuery(line) {
 
         //La regex coincide casi con la de facts, pero podemos necesitar cambiarlas independientemente.
-        var match = line.match(/^ *([a-zA-Z]+)\(([a-z ,]*?)\) *$/);
+        var match = line.match(/^ *([a-zA-Z]+)\(([a-z ,]+?)\) *$/);
 
         if(!match) return null;
 
         return {
             verb : match[1],
-            parameters : match[2].split(/ *, */)
+            parameters : parseParameters(match[2])
         }
 
     }
 
     function matchFact(line) {
-        var match = line.match(/ *([a-zA-Z]+)\(([a-z ,]*?)\)\.? */);
+        var match = line.match(/ *([a-zA-Z]+)\(([a-z ,]+?)\)\.? */);
 
         if(!match) return null;
 
         return {
             verb : match[1],
-            parameters : match[2].split(/ *, */)
+            parameters : parseParameters(match[2])
         }
 
     }
 
     function matchRule(line) {
 
-        var match = line.match(/ *([a-zA-Z]+)\(([A-Z ,]*?)\) *:- *((?: *(?:[a-zA-Z]+)\((?:[A-Z ,]*?)\),? *)+)\./);
+        var match = line.match(/ *([a-zA-Z]+)\(([A-Z ,]+?)\) *:- *((?: *(?:[a-zA-Z]+)\((?:[A-Z ,]+?)\),? *)+)\./);
 
         if(!match) return null;
 
@@ -112,7 +122,7 @@ var Interpreter = function () {
 
         conditions = conditions.map(condition =>  {
 
-            var match = condition.match(/ *([a-zA-Z]+)\(([a-zA-Z ,]*?)\) */);
+            var match = condition.match(/ *([a-zA-Z]+)\(([a-zA-Z ,]+?)\) */);
 
             if(!match) return null;
 

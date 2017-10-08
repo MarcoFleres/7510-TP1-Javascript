@@ -1,12 +1,11 @@
 var Interpreter = function () {
 
-
     var db;
 
     this.parseDB = function (dbLines) {
 
         db = {
-          facts : {},
+        	facts : {},
             rules : {}
         };
 
@@ -15,22 +14,20 @@ var Interpreter = function () {
             var line = dbLines[i];
 
             if(match = matchFact(line)) {
-                //console.log(" Fact > ", match);
 
                 (db.facts[match.verb] = db.facts[match.verb] || []).push(match.parameters);
 
             } else if(match = matchRule(line)) {
-                //console.log(" Rule > ", match);
 
                 db.rules[match.verb] = match;
 
             } else {
-                throw `Invalid Line :${i} (${line})`
+
+                throw `Invalid Line :${i} '${line}'`
+
             }
 
         }
-
-        //console.log(JSON.stringify(db, null, ' '));
 
     }
 
@@ -38,28 +35,23 @@ var Interpreter = function () {
 
         if(!db) throw "DB not initialized";
 
-        console.log("Evaluating " + query);
-
         var match = matchQuery(query);
 
-        if(!match) throw "Invalid Query: " + query;
+        if(!match) throw `Invalid Query: '${query}'`;
 
         var queryParameters = match.parameters;
 
         if(db.facts[match.verb]) {
             // Buscamos en la base de datos un fact con los mismos parámetros
-            // console.log("Checking query agains facts with parameters: " + JSON.stringify(match.parameters));
-            // console.log("Searching fact parameters: " + JSON.stringify(db.facts[match.verb]));
 
-            return undefined != db.facts[match.verb].find(parameters => {
+            var matchedFact = db.facts[match.verb].find(parameters => {
                 if(parameters.length != queryParameters.length) return false;
                 return queryParameters.every( (parameter,index) => parameter == parameters[index] );
             });
 
+            return undefined != matchedFact;
+
         } else if(rule = db.rules[match.verb]) {
-
-            console.log("Evaluating rule: " + JSON.stringify(rule));
-
             //Mapeamos los parámetros de la query con los de la regla
 
             if(rule.parameters.length != queryParameters.length) return false;
@@ -70,19 +62,14 @@ var Interpreter = function () {
                 parameterMap[element] = queryParameters[index];
             });
 
-            console.log("Parameter Map: " + JSON.stringify(parameterMap));
+            // Evaluamos la regla
 
             return rule.conditions.every(condition => {
 
-                console.log("Evaluating condition: " + JSON.stringify(condition));
-
                 return this.checkQuery(`${condition.verb}(${condition.parameters.map(e => parameterMap[e]).join(",")})`)
-
 
             });
 
-
-            console.log("It is a Rule!");
         }
 
         return true;
@@ -91,7 +78,7 @@ var Interpreter = function () {
     function matchQuery(line) {
 
         //La regex coincide casi con la de facts, pero podemos necesitar cambiarlas independientemente.
-        var match = line.match('^ *\([a-zA-Z]+\)\\(\([a-z ,]*?\)\\) *$');
+        var match = line.match(/^ *([a-zA-Z]+)\(([a-z ,]*?)\) *$/);
 
         if(!match) return null;
 
@@ -103,7 +90,7 @@ var Interpreter = function () {
     }
 
     function matchFact(line) {
-        var match = line.match('^ *\([a-zA-Z]+\)\\(\([a-z ,]*?\)\\)\. *$');
+        var match = line.match(/ *([a-zA-Z]+)\(([a-z ,]*?)\)\.? */);
 
         if(!match) return null;
 
@@ -116,15 +103,16 @@ var Interpreter = function () {
 
     function matchRule(line) {
 
-        var match = line.match(' *\([a-zA-Z]+\)\\(\([A-Z ,]*?\)\\) *:- *\(\(?: *\(?:[a-zA-Z]+\)\\(\(?:[A-Z ,]*?\)\\),? *\)+\)\.')
+        var match = line.match(/ *([a-zA-Z]+)\(([A-Z ,]*?)\) *:- *((?: *(?:[a-zA-Z]+)\((?:[A-Z ,]*?)\),? *)+)\./);
 
         if(!match) return null;
 
+        // Descomponemos las condiciones de la regla, en facts que puedan evaluarse.
         var conditions = match[3].split(/ *,(?![^(]*\)) */);    // Split por comas que no estén entre paréntesis
 
         conditions = conditions.map(condition =>  {
-            //console.log("Parsing Condition : " + condition);
-            var match = condition.match(' *\([a-zA-Z]+\)\\(\([a-zA-Z ,]*?\)\\) *');
+
+            var match = condition.match(/ *([a-zA-Z]+)\(([a-zA-Z ,]*?)\) */);
 
             if(!match) return null;
 
@@ -133,8 +121,6 @@ var Interpreter = function () {
                 parameters : match[2].split(/ *, */)
             }
         });
-
-        //console.log("Condiciones: " + JSON.stringify(conditions));
 
         return {
             verb : match[1],

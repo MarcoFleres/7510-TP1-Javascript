@@ -111,6 +111,53 @@ describe("Interpreter", function () {
 
 });
 
+describe('Number Database', function() {
+
+
+    var db = [
+        "add(zero, zero, zero).",
+        "add(zero, one, one).",
+        "add(zero, two, two).",
+        "add(one, zero, one).",
+        "add(one, one, two).",
+        "add(one, two, zero).",
+        "add(two, zero, two).",
+        "add(two, one, zero).",
+        "add(two, two, one).",
+        "subtract(X, Y, Z) :- add(Y, Z, X)."
+    ];
+
+    var interpreter = null;
+
+    beforeEach(function () {
+        // runs before each test in this block
+        interpreter = new Interpreter();
+        interpreter.parseDB(db);
+    });
+
+    describe('Interpreter Facts', function() {
+
+        it("add(one, one, two) should be true", function() {
+            assert(interpreter.checkQuery('add(one, one, two)') === true);
+        });
+
+        it("add(two, one, one) should be false", function() {
+            assert(interpreter.checkQuery('add(two, one, one)') === false);
+        });
+
+        it("subtract(one, one, two) should be false", function() {
+            assert(interpreter.checkQuery('subtract(one, one, two)') === false);
+        });
+
+        it("subtract(two, one, one) should be true", function() {
+            assert(interpreter.checkQuery('subtract(two, one, one)') === true);
+        });
+
+    });
+
+
+});
+
 describe('Empty Database', function() {
 
     var interpreter = new Interpreter();

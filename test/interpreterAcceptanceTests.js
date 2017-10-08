@@ -67,7 +67,13 @@ describe("Interpreter", function () {
             assert(interpreter.checkQuery('padre(mario, pepe)') === false);
         });
 
-        // TODO: Add more tests
+        it('mujer(juan) should be false', function () {
+            assert(interpreter.checkQuery('mujer(juan)') === false);
+        });
+
+        it('padre(pepe, juan) should be false', function () {
+            assert(interpreter.checkQuery('padre(pepe, juan)') === false);
+        });
 
     });
 
@@ -87,16 +93,37 @@ describe("Interpreter", function () {
 
     });
 
+    describe('Wrong Queries', function() {
+
+        it('Empty Parameter', function () {
+            assert.throws(() => {
+                interpreter.checkQuery('hijo(pepe, )');
+            });
+        });
+        it('No Parameter', function () {
+            assert.throws(() => {
+                interpreter.checkQuery('hijo()');
+            });
+        });
+
+    });
+
 
 });
 
-describe('Empty Interpreter', function() {
+describe('Empty Database', function() {
 
     var interpreter = new Interpreter();
 
     it('Parsing without initialization', function () {
         assert.throws(() => {
             interpreter.checkQuery('hijo(pepe, juan)');
+        }, "DB not initialized");
+    });
+
+    it('Wrong query without initializing db', function () {
+        assert.throws(() => {
+            interpreter.checkQuery('hijo(pepe, )');
         }, "DB not initialized");
     });
 
